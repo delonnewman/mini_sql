@@ -44,12 +44,16 @@ module MiniSql
         cursor = raw_connection.parse(param_encoder.encode(sql, *params))
         cursor.exec
         deserializer_cache.materialize(cursor)
+      ensure
+        cursor.close if cursor
       end
 
       def query_decorator(decorator, sql, *params)
         cursor = raw_connection.parse(param_encoder.encode(sql, *params))
         cursor.exec
         deserializer_cache.materialize(cursor, decorator)
+      ensure
+        cursor.close if cursor
       end
 
       def exec(sql, *params)
