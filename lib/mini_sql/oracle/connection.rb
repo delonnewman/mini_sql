@@ -17,7 +17,39 @@ module MiniSql
       end
 
       def query_single(sql, *params)
-        
+        raw_connection.select_one(param_encoder.encode(sql, *params))
+      end
+
+      def query_hash(sql, *params)
+        cursor = raw_connection.parse(param_encoder.encode(sql, *params))
+        cursor.exec
+        r = []
+        cursor.fetch_hash do |h|
+          r << h
+        end
+        r
+      ensure
+        cursor.close if cursor
+      end
+
+      def query_array(sql, *params)
+        r = []
+        run(sql, params) do |a|
+          r << a
+        end
+        r
+      end
+
+      def query(sql, *params)
+        cursor = raw_connection.parse(param_encoder.encode(sql, *params))
+        cursor.exec
+        deserializer_cache.materialize(cursor)
+      end
+
+      def query_decorator(decorator, sql, *params)
+        cursor = raw_connection.parse(param_encoder.encode(sql, *params))
+        cursor.exec
+        deserializer_cache.materialize(cursor, decorator)
       end
 
       def exec(sql, *params)
@@ -30,7 +62,12 @@ module MiniSql
         if params && params.length > 0
           sql = param_encoder.encode(sql, *params)
         end
-        raw_connection.exec(sql)
+
+        if block_given?
+          raw_connection.exec(sql, &Proc.new)
+        else
+          raw_connection.exec(sql)
+        end
       end
     end
   end

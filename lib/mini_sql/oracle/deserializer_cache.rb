@@ -11,37 +11,33 @@ module MiniSql
         @max_size = max_size || DEFAULT_MAX_SIZE
       end
 
-      def materialize(result, decorator_module = nil)
-        return [] if result.ntuples == 0
+      def materialize(cursor, decorator_module = nil)
+        fields = cursor.get_col_names
+        fields.map!(&:downcase)
 
-        key = result.fields
+        key = fields.hash
 
         # trivial fast LRU implementation
         materializer = @cache.delete(key)
         if materializer
           @cache[key] = materializer
         else
-          materializer = @cache[key] = new_row_matrializer(result)
+          materializer = @cache[key] = new_row_matrializer(cursor, fields)
           @cache.shift if @cache.length > @max_size
         end
 
         materializer.include(decorator_module) if decorator_module
 
-        i = 0
         r = []
-        # quicker loop
-        while i < result.ntuples
-          r << materializer.materialize(result, i)
-          i += 1
+        cursor.fetch do |data|
+          r << materializer.materialize(data)
         end
         r
       end
 
       private
 
-      def new_row_matrializer(result)
-        fields = result.fields
-
+      def new_row_matrializer(cursor, fields)
         Class.new do
           attr_accessor(*fields)
 
@@ -57,9 +53,9 @@ module MiniSql
           end
 
           instance_eval <<~RUBY
-            def materialize(pg_result, index)
+            def materialize(data)
               r = self.new
-              #{col = -1; fields.map { |f| "r.#{f} = pg_result.getvalue(index, #{col += 1})" }.join("; ")}
+              #{col = -1; fields.map { |f| "r.#{f} = data[#{col += 1}]" }.join("; ")}
               r
             end
           RUBY
