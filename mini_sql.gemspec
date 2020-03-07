@@ -47,5 +47,6 @@ Gem::Specification.new do |spec|
     spec.add_development_dependency "pg", "> 1"
     spec.add_development_dependency "mysql2"
     spec.add_development_dependency "sqlite3", "~> 1.3"
+    spec.add_development_dependency "ruby-oci8"
   end
 end

@@ -31,5 +31,10 @@ module MiniSql
       autoload :Connection, "mini_sql/mysql/connection"
       autoload :DeserializerCache, "mini_sql/mysql/deserializer_cache"
     end
+
+    module Oracle
+      autoload :Connection, "mini_sql/oracle/connection"
+      autoload :DeserializerCache, "mini_sql/oracle/deserializer_cache"
+    end
   end
 end
