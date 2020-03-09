@@ -58,6 +58,15 @@ module MiniSql
         run(sql, params)
       end
 
+      def escape_string(str)
+        # FIXME: there should be a better option than this
+        str.gsub("'", "''")
+      end
+
+      def build(sql)
+        Builder.new(self, sql)
+      end
+
       private
 
       def run(sql, params)
