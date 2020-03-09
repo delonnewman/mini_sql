@@ -17,43 +17,41 @@ module MiniSql
       end
 
       def query_single(sql, *params)
-        raw_connection.select_one(param_encoder.encode(sql, *params))
+        run(sql, params) do |cursor|
+          cursor.fetch
+        end
       end
 
       def query_hash(sql, *params)
-        cursor = raw_connection.parse(param_encoder.encode(sql, *params))
-        cursor.exec
-        r = []
-        cursor.fetch_hash do |h|
-          r << h
+        run(sql, params) do |cursor|
+          r = []
+          while h = cursor.fetch_hash
+            r << h
+          end
+          r
         end
-        r
-      ensure
-        cursor.close if cursor
       end
 
       def query_array(sql, *params)
-        r = []
-        run(sql, params) do |a|
-          r << a
+        run(sql, params) do |cursor|
+          r = []
+          while a = cursor.fetch
+            r << a
+          end
+          r
         end
-        r
       end
 
       def query(sql, *params)
-        cursor = raw_connection.parse(param_encoder.encode(sql, *params))
-        cursor.exec
-        deserializer_cache.materialize(cursor)
-      ensure
-        cursor.close if cursor
+        run(sql, params) do |cursor|
+          deserializer_cache.materialize(cursor)
+        end
       end
 
       def query_decorator(decorator, sql, *params)
-        cursor = raw_connection.parse(param_encoder.encode(sql, *params))
-        cursor.exec
-        deserializer_cache.materialize(cursor, decorator)
-      ensure
-        cursor.close if cursor
+        run(sql, params) do |cursor|
+          deserializer_cache.materialize(cursor, decorator)
+        end
       end
 
       def exec(sql, *params)
@@ -67,11 +65,16 @@ module MiniSql
           sql = param_encoder.encode(sql, *params)
         end
 
+        cursor = raw_connection.parse(sql)
+        res = cursor.exec
+
         if block_given?
-          raw_connection.exec(sql, &Proc.new)
+          yield cursor
         else
-          raw_connection.exec(sql)
+          res
         end
+      ensure
+        cursor.close if cursor
       end
     end
   end

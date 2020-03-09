@@ -29,7 +29,7 @@ module MiniSql
         materializer.include(decorator_module) if decorator_module
 
         r = []
-        cursor.fetch do |data|
+        while data = cursor.fetch
           r << materializer.materialize(data)
         end
         r
