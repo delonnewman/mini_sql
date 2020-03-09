@@ -42,6 +42,16 @@ module MiniSql
         end
       end
 
+      def query_each(sql, *params)
+        raise "A block is required" unless block_given?
+
+        run(sql, params) do |cursor|
+          while a = cursor.fetch
+            yield a
+          end
+        end
+      end
+
       def query(sql, *params)
         run(sql, params) do |cursor|
           deserializer_cache.materialize(cursor)
