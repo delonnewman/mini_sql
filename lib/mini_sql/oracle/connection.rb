@@ -5,6 +5,11 @@ module MiniSql
     class Connection < MiniSql::Connection
       attr_reader :param_encoder, :raw_connection, :deserializer_cache
 
+      OCI8::BindType::Mapping[Time]           = OCI8::BindType::LocalTime
+      OCI8::BindType::Mapping[:date]          = OCI8::BindType::LocalTime
+      OCI8::BindType::Mapping[:timestamp]     = OCI8::BindType::LocalTime
+      OCI8::BindType::Mapping[:timestamp_ltz] = OCI8::BindType::UTCTime
+
       # Initialize a new MiniSql::Oracle::Connection object
       #
       # @param raw_connection [OCI8] an active connection to Oracle
@@ -68,6 +73,8 @@ module MiniSql
         run(sql, params)
       end
 
+      # @see http://www.orafaq.com/wiki/SQL_FAQ#How_does_one_escape_special_characters_when_writing_SQL_queries.3F Oracle FAQ
+      # @see https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html OWASP SQL Injection Cheatsheet
       def escape_string(str)
         # FIXME: there should be a better option than this
         str.gsub("'", "''")
