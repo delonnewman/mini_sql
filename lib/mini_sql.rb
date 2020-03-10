@@ -36,5 +36,10 @@ module MiniSql
       autoload :Connection, "mini_sql/oracle/connection"
       autoload :DeserializerCache, "mini_sql/oracle/deserializer_cache"
     end
+
+    module SqlServer
+      autoload :Connection, "mini_sql/mssql/connection"
+      autoload :DeserializerCache, "mini_sql/mssql/deserializer_cache"
+    end
   end
 end
