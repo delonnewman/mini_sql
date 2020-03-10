@@ -14,7 +14,6 @@ module MiniSql
       # SELECT id FROM departments ORDER BY id ASC OFFSET 0 ROWS FETCH NEXT 3 ROWS ONLY
       def query_single(sql, *params)
         results = run(sql, *params)
-        # results.to_a.compact
         results.each(as: :array, :first => true).first
       end
 
