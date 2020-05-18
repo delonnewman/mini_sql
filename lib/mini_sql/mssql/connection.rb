@@ -18,12 +18,12 @@ module MiniSql
       end
 
       def query_hash(sql, *params)
-        result = run(sql, params)
+        result = run(sql, *params)
         result.to_a
       end
 
       def query_array(sql, *params)
-        result = run(sql, :array, params)
+        result = run(sql, :array, *params)
         r = []
         result.each(as: :array, cache_rows: false) do |row|
           r << row
@@ -32,17 +32,17 @@ module MiniSql
       end
 
       def exec(sql, *params)
-        result = run(sql, params)
+        result = run(sql, *params)
         result.affected_rows
       end
 
       def query(sql, *params)
-        result = run(sql, params)
+        result = run(sql, *params)
         @deserializer_cache.materialize(result)
       end
 
       def query_decorator(decorator, sql, *params)
-        run(sql, params) do |cursor|
+        run(sql, *params) do |cursor|
           deserializer_cache.materialize(cursor, decorator)
         end
       end
